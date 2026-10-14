@@ -1,0 +1,5 @@
+# Core module has no external dependencies
+# Optional for visual demo:
+pygame>=2.0
+# For testing:
+pytest>=7.0

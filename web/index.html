@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Module - Interactive Physics & AI Engine Playground</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-layout">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-left">
+                <div class="brand-badge">WEEK 2 DELIVERABLE</div>
+                <h1 class="app-title">Game Module <span class="accent-text">Engine Studio</span></h1>
+                <span class="version-tag">v1.0.0 • Python & HTML5 Canvas</span>
+            </div>
+            <div class="header-right">
+                <button id="btn-run-tests" class="btn btn-secondary">
+                    <span class="btn-icon">⚡</span> Run Test Suite (19/19)
+                </button>
+                <button id="btn-run-sim" class="btn btn-secondary">
+                    <span class="btn-icon">▶</span> Run Headless Sim
+                </button>
+                <button id="btn-reset-game" class="btn btn-primary">
+                    <span class="btn-icon">↺</span> Reset Sandbox
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Workspace -->
+        <main class="main-workspace">
+            <!-- Left Panel: Telemetry & Engine Inspector -->
+            <aside class="panel telemetry-panel">
+                <div class="panel-header">
+                    <h2>Live Telemetry</h2>
+                    <span id="fps-counter" class="fps-badge">60 FPS</span>
+                </div>
+
+                <!-- Player Card -->
+                <div class="telemetry-card player-card">
+                    <div class="card-title">
+                        <span class="dot player-dot"></span>
+                        <h3>Player Entity</h3>
+                        <span id="player-hp-badge" class="badge badge-success">100 HP</span>
+                    </div>
+                    <div class="hp-bar-bg">
+                        <div id="player-hp-bar" class="hp-bar-fill player-fill" style="width: 100%;"></div>
+                    </div>
+                    <div class="telemetry-grid">
+                        <div class="stat-item">
+                            <span class="stat-label">Position</span>
+                            <span id="stat-player-pos" class="stat-val font-mono">(0.00, 0.00)</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Velocity</span>
+                            <span id="stat-player-vel" class="stat-val font-mono">(0.00, 0.00)</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Grounded</span>
+                            <span id="stat-player-grounded" class="stat-val stat-badge true">YES</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Coyote Time</span>
+                            <span id="stat-player-coyote" class="stat-val font-mono">0.00s</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Dash Cooldown</span>
+                            <span id="stat-player-dash" class="stat-val font-mono">READY</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Jump Buffer</span>
+                            <span id="stat-player-buffer" class="stat-val font-mono">IDLE</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Enemy Card -->
+                <div class="telemetry-card enemy-card">
+                    <div class="card-title">
+                        <span class="dot enemy-dot"></span>
+                        <h3>Enemy AI (FSM)</h3>
+                        <span id="enemy-state-badge" class="badge badge-warning">Idle</span>
+                    </div>
+                    <div class="hp-bar-bg">
+                        <div id="enemy-hp-bar" class="hp-bar-fill enemy-fill" style="width: 100%;"></div>
+                    </div>
+                    <div class="telemetry-grid">
+                        <div class="stat-item">
+                            <span class="stat-label">Position</span>
+                            <span id="stat-enemy-pos" class="stat-val font-mono">(0.00, 0.00)</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Distance to Player</span>
+                            <span id="stat-enemy-dist" class="stat-val font-mono">0.00 m</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">A* Path Waypoints</span>
+                            <span id="stat-enemy-waypoints" class="stat-val font-mono">0 nodes</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Sight to Player</span>
+                            <span id="stat-enemy-los" class="stat-val stat-badge">BLOCKED</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Physics Controls & Tuning -->
+                <div class="telemetry-card controls-card">
+                    <div class="card-title">
+                        <h3>Physics Tuning & Sandbox</h3>
+                    </div>
+                    <div class="control-row">
+                        <label for="slider-gravity">Gravity: <span id="label-gravity">22.0</span> m/s²</label>
+                        <input type="range" id="slider-gravity" min="0" max="50" step="1" value="22">
+                    </div>
+                    <div class="control-row">
+                        <label for="slider-jump">Jump Force: <span id="label-jump">12.0</span></label>
+                        <input type="range" id="slider-jump" min="6" max="24" step="1" value="12">
+                    </div>
+                    <div class="sandbox-buttons">
+                        <button id="btn-spawn-box" class="btn btn-tiny">Spawn Physics Crate</button>
+                        <button id="btn-damage-enemy" class="btn btn-tiny btn-danger">Deal 20 Damage to Enemy</button>
+                    </div>
+                </div>
+
+                <!-- Debug Overlays -->
+                <div class="telemetry-card overlay-card">
+                    <div class="card-title">
+                        <h3>Visual Overlays</h3>
+                    </div>
+                    <div class="toggle-grid">
+                        <label class="toggle-item">
+                            <input type="checkbox" id="toggle-colliders" checked>
+                            <span>AABB Colliders</span>
+                        </label>
+                        <label class="toggle-item">
+                            <input type="checkbox" id="toggle-path" checked>
+                            <span>A* Path & LOS</span>
+                        </label>
+                        <label class="toggle-item">
+                            <input type="checkbox" id="toggle-ranges" checked>
+                            <span>Sensory Radii</span>
+                        </label>
+                        <label class="toggle-item">
+                            <input type="checkbox" id="toggle-grid" checked>
+                            <span>Spatial Grid</span>
+                        </label>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Center: Game Canvas Stage -->
+            <section class="canvas-section">
+                <div class="canvas-container">
+                    <canvas id="game-canvas" width="900" height="660"></canvas>
+                    <div id="combat-banner" class="combat-banner hidden">
+                        <span id="combat-banner-text">ENEMY DEFEATED!</span>
+                    </div>
+                </div>
+
+                <!-- Controls Guide Footer -->
+                <div class="controls-guide">
+                    <div class="key-hint"><kbd>A</kbd> <kbd>D</kbd> or <kbd>←</kbd> <kbd>→</kbd> Move</div>
+                    <div class="key-hint"><kbd>SPACE</kbd> Jump (Buffered + Coyote)</div>
+                    <div class="key-hint"><kbd>SHIFT</kbd> Dash</div>
+                    <div class="key-hint"><kbd>J</kbd> Melee Strike</div>
+                    <div class="key-hint"><kbd>R</kbd> Reset Sandbox</div>
+                </div>
+            </section>
+
+            <!-- Right Panel: Architecture & Module Specs -->
+            <aside class="panel info-panel">
+                <div class="panel-header">
+                    <h2>Module Architecture</h2>
+                </div>
+
+                <div class="info-accordion">
+                    <div class="accordion-item active">
+                        <div class="accordion-header">
+                            <span class="icon">⚙️</span>
+                            <h4>1. 2D Physics Engine</h4>
+                        </div>
+                        <div class="accordion-body">
+                            <p><strong>Semi-implicit Euler</strong> integration with 4x sub-stepping. MTV (Minimum Translation Vector) separation with <strong>Baumgarte stabilization</strong>, restitution impulses, and Coulomb tangent friction.</p>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item active">
+                        <div class="accordion-header">
+                            <span class="icon">🧠</span>
+                            <h4>2. Enemy AI & A* Path</h4>
+                        </div>
+                        <div class="accordion-body">
+                            <p>Hierarchical FSM managing <code>Idle</code>, <code>Patrol</code>, <code>Chase</code>, <code>Attack</code>, and <code>Flee</code> (&lt;25% HP). Includes Octile metric A* pathfinding and line-of-sight raycast smoothing.</p>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item active">
+                        <div class="accordion-header">
+                            <span class="icon">🎮</span>
+                            <h4>3. Dynamic Input Layer</h4>
+                        </div>
+                        <div class="accordion-body">
+                            <p>Decoupled action mapping supporting multi-key bindings, 150ms jump buffering, 120ms coyote time window, and multi-key combo recognition.</p>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item active">
+                        <div class="accordion-header">
+                            <span class="icon">📦</span>
+                            <h4>Submission Deliverable</h4>
+                        </div>
+                        <div class="accordion-body">
+                            <p>Compressed zip archive: <a href="/download-zip" class="link-download"><code>week2_game_module_submission.zip</code></a> containing all source code and documentation.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Live Test Output Card -->
+                <div class="telemetry-card terminal-card">
+                    <div class="card-title">
+                        <h3>Python Backend Diagnostics</h3>
+                        <span id="backend-status-badge" class="badge badge-success">Online</span>
+                    </div>
+                    <pre id="terminal-output" class="terminal-body">Click "Run Test Suite" to execute all 19 unit & integration tests on the Python backend.</pre>
+                </div>
+            </aside>
+        </main>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
